@@ -1,11 +1,11 @@
 #!/bin/bash
-echo "当前年轻人学习网课方式!"
+echo "当代年轻人学习网课方式!"
 
 # 指定学习第几个学期
-target_study_year=4
+target_study_year=5
 
 # 指定Cookie
-header_cookie="Cookie: sessionId=691d3b1f82d6ea675141acc33ee53c19; UserKey=3A2AC39DC19E49339B5CA4AD380DC9C7"
+header_cookie="Cookie: sessionId=8f29eee9952f4d2eab84ea2f75a21d6f; UserKey=3A2AC39DC19E49339B5CA4AD380DC9X"
 
 # 指定缓冲时间
 sleep_time=50
@@ -79,9 +79,13 @@ function main() {
     study_year_total=$(echo "$curl_std_curriculum_list" | jq '.Data.list | length')
     study_year_max=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$((study_year_total - 1))].StudyYear")
 
+    test "$study_year_total" -eq 0 && {
+        error 获取学期数失败
+        exit 1
+    }
     log "共${study_year_total}门课,共${study_year_max}学期"
     test "$target_study_year" -gt "$study_year_max" && {
-        log "target_study_year变量指定错误,超过最大学期数$study_year_total"
+        error "target_study_year变量指定错误,超过最大学期数$study_year_total"
         exit 1
     }
     for(( ; ; )); do
