@@ -18,7 +18,6 @@ header_cache_control="Cache-Control: max-age=0"
 header_connection="Connection: keep-alive"
 header_content_type="Content-Type: application/json; charset=utf-8"
 header_user_agent="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
-ip=$(curl -s cip.cc | grep "[[:digit:]].*" -o | head -n 1)
 
 function log() {
     echo -e "$(date "+%F %T") ${1}"
@@ -27,6 +26,7 @@ function error() {
     echo -e "\033[1;31m$(date "+%F %T") ${1}\033[0m"
 }
 function CommandLineOnlineClasses() {
+    ip=$(curl -s cip.cc | grep "[[:digit:]].*" -o | head -n 1)
     curl_save_course_look=$(curl -s "http://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq '.Message' | tr -d '"')
 
     case "$curl_save_course_look" in
@@ -63,6 +63,69 @@ function GetCourseChapterList() {
     done
 
 }
+function init() {
+    os=$(uname)
+    case $os in
+    # macOS基本命令检测
+    Darwin)
+        which curl >/dev/null 2>&1 || {
+            log "准备安装curl命令,具体命令"
+            brew install curl || {
+                error "brew install curl 执行失败"
+                exit 1
+            }
+        }
+        which jq >/dev/null 2>&1 || {
+            log "准备安装jq命令..."
+            brew install jq || {
+                error "brew install jq 执行失败"
+                exit 1
+            }
+        }
+        return
+        ;;
+    Linux)
+        # Centos 基本命令检测
+        test -r /etc/redhat-release && grep "CentOS" /etc/redhat-release >/dev/null 2>&1 && {
+
+            which curl >/dev/null 2>&1 || {
+                log "准备安装curl命令"
+                sudo yum -y install curl || {
+                    error "sudo yum -y install curl 执行失败"
+                    exit 1
+                }
+            }
+            which jq >/dev/null 2>&1 || {
+                log "准备安装jq命令..."
+                sudo yum -y install jq || {
+                    error "sudo yum -y install jq 执行失败"
+                    exit 1
+                }
+            }
+            return
+        }
+        # Ubuntu 基本命令检测
+        lsb_release -a 2>/dev/null | grep "Ubuntu" >/dev/null 2>&1 && {
+            which curl >/dev/null 2>&1 || {
+                log "准备安装curl命令"
+                sudo apt -y install curl || {
+                    error "sudo apt -y install curl 执行失败"
+                    exit 1
+                }
+            }
+            which jq >/dev/null 2>&1 || {
+                log "准备安装jq命令..."
+                sudo apt -y install jq || {
+                    error "sudo apt -y install jq 执行失败"
+                    exit 1
+                }
+            }
+            return
+        }
+        ;;
+
+    esac
+}
 
 function main() {
     log "指定学习第${target_study_year}学期"
@@ -80,7 +143,7 @@ function main() {
     study_year_max=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$((study_year_total - 1))].StudyYear")
 
     test "$study_year_total" -eq 0 && {
-        error 获取学期数失败
+        error "获取学期数失败"
         exit 1
     }
     log "共${study_year_total}门课,共${study_year_max}学期"
@@ -88,7 +151,7 @@ function main() {
         error "target_study_year变量指定错误,超过最大学期数$study_year_total"
         exit 1
     }
-    for(( ; ; )); do
+    for (( ; ; )); do
         is_look_status=0
         for ((i = 0; i < study_year_total; i++)); do
             std_curriculum_list=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$i]")
@@ -127,4 +190,5 @@ function main() {
         sleep "$sleep_time"
     done
 }
+init
 main
