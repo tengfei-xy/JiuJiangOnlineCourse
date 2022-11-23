@@ -1,13 +1,16 @@
 #!/bin/bash
+# 注:当需要多学期学期时，建议多脚本并行执行以加快刷视频的速度,如 ./video.sh 1(表示刷第一学期的视频)
+
 echo "当代年轻人学习网课方式!"
 
-# 指定学习第几个学期
-target_study_year=5
+# 指定学习第几个学期,支持从命令行的参数去设置
+# 注:1表示$1,5表示第5学期,当$1不存在时target_study_year=5,$1存在时使用target_study_year=$1
+target_study_year=${1:-5}
 
 # 指定Cookie
-header_cookie="Cookie: sessionId=8f29eee9952f4d2eab84ea2f75a21d6f; UserKey=3A2AC39DC19E49339B5CA4AD380DC9X"
+header_cookie="Cookie: sessionId=; UserKey="
 
-# 指定缓冲时间
+# 指定缓冲时间,当一次循环的刷课时间大于sleep_time时，可以降低sleep_time值，以加快刷视频速度
 sleep_time=50
 
 # 以下变量不需要变化

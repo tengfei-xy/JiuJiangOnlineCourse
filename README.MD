@@ -20,15 +20,15 @@ video.sh是针对视频，exam.sh是针对试题
 
 将脚本下载后需要修改的变量是
 
-**target_study_year**：指定需要学习第几个学期，最小为1
+**target_study_year**：指定需要学习第几个学期，最小为1,也支持从命令行的参数去设置,注:1表示$1,5表示第5学期,当$1不存在时target_study_year=5,$1存在时使用target_study_year=$1
 
 **header_cookie**：微信扫描登录网课后，即可通过浏获取到Cookie，Cookie的值包含sessionId和UserKey
 
-**sleep_time**：睡眠时间，指定60以下即可，大于60的值毫无意义，推荐值：50
+**sleep_time**：指定缓冲时间，大于60的值毫无意义，推荐值：50，当一次循环的刷课时间大于sleep_time时，可以降低sleep_time值，以加快刷视频速度
 
 > 参考格式：
 >
-> target_study_year=4
+> target_study_year=${1:-5}
 >
 > header_cookie="Cookie: sessionId=691d3b1f82d6ea675141acc33ee53c19; UserKey=3A2AC39DC19E49339B5CA4AD380DC9C7"
 >
@@ -59,6 +59,8 @@ video.sh是针对视频，exam.sh是针对试题
    > 2022-10-11 17:13:40 第4学期的所有课程完成
 
 3. 针对视频验证，需要人工参与，在网页中打开任何一个视频，直接验证即可。注：在脚本执行过程中，会提示需要进行验证，此时在网页打开中的视频进行暂停就有出现验证窗口，验证成功后脚本将继续。另外，脚本不会因为需要验证而停留，手动验证即可。
+
+4. 注:当需要多学期学期时，建议多脚本并行执行以加快刷视频的速度,如 ./video.sh 0(表示刷第一学期的视频)
 
 ## 3.3 破解思路
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-header_cookie="Cookie: sessionId=691d3b1f82d6ea675141acc33ee53c19; UserKey=3A2AC39DC19E49339B5CA4AD380DC9CX"
+header_cookie="Cookie: sessionId=; UserKey="
 
 # 以下变量不需要变化
 header_accept="Accept: */*'"
@@ -104,8 +104,9 @@ function main() {
 
     # 获取result_id
     curl_result_id=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperQuestions?examPaperId=${exam_paper_id}&IsBegin=1&StuID=${StuID}&StuDetail_ID=${StuDetail_ID}&Examination_ID=0&Curriculum_ID=${curriculum_curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
+    set +x 
     if [ "$(echo "$curl_result_id" | jq '.Message' | tr -d '"')" == "verify" ]; then
-        echo "需要在考试页面刷新进行验证"
+        echo "需要在考试页面刷新进行验证,若刷新后依然需要验证,请重新登录以获取新cookie"
         exit 1
     fi
     result_id=$(echo "$curl_result_id" | jq '.Data.ResultId')
