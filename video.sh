@@ -1,17 +1,19 @@
 #!/bin/bash
 # 注:当需要多学期学期时，建议多脚本并行执行以加快刷视频的速度,如 ./video.sh 1(表示刷第一学期的视频)
 
-echo "当代年轻人学习网课方式!"
-
 # 指定学习第几个学期,支持从命令行的参数去设置
 # 注:1表示$1,5表示第5学期,当$1不存在时target_study_year=5,$1存在时使用target_study_year=$1
 target_study_year=${1:-5}
 
 # 指定Cookie
-header_cookie="Cookie: sessionId=; UserKey="
+# 格式:header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
+header_cookie="Cookie:"
 
-# 指定缓冲时间,当一次循环的刷课时间大于sleep_time时，可以降低sleep_time值，以加快刷视频速度
-sleep_time=50
+# 当一次循环保存记录后,如果进度依然是0，需要更换IP
+# 自动指定
+ip=$(curl -s cip.cc | grep "[[:digit:]].*" -o | head -n 1)
+# 手动指定（2022-11-24 仅需要设定新的ip变量即可，无需保证真实的出口IP）
+# ip="115.231.214.235"
 
 # 以下变量不需要变化
 header_accept="Accept: */*'"
@@ -22,6 +24,8 @@ header_connection="Connection: keep-alive"
 header_content_type="Content-Type: application/json; charset=utf-8"
 header_user_agent="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
 
+echo "当代年轻人学习网课方式! IP:${ip}"
+
 function log() {
     echo -e "$(date "+%F %T") ${1}"
 }
@@ -29,15 +33,14 @@ function error() {
     echo -e "\033[1;31m$(date "+%F %T") ${1}\033[0m"
 }
 function CommandLineOnlineClasses() {
-    ip=$(curl -s cip.cc | grep "[[:digit:]].*" -o | head -n 1)
     curl_save_course_look=$(curl -s "http://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq '.Message' | tr -d '"')
 
     case "$curl_save_course_look" in
     *观看记录添加成功*)
-        log "${curl_save_course_look} ${3} ${2}"
+        log "${curl_save_course_look} ${3} ${2} 进度:${4}"
         ;;
     *)
-        error "${curl_save_course_look} ${3} ${2}"
+        error "${curl_save_course_look} ${3} ${2} 进度:${4}"
         ;;
     esac
 }
@@ -55,9 +58,10 @@ function GetCourseChapterList() {
         for ((k = 0; k < chapter_child_length; k++)); do
             chapter_child_name=$(echo "$curl_list" | jq ".Data[$j].ChildNodeList[$k].CourseWare_Name")
             chapter_child_islook=$(echo "$curl_list" | jq ".Data[$j].ChildNodeList[$k].IsLook")
+            chapter_child_totalsecond=$(echo "$curl_list" | jq ".Data[$j].ChildNodeList[$k].TotalSecond")
 
             if [ "$chapter_child_islook" == "0" ]; then
-                CommandLineOnlineClasses "$(echo "$curl_list" | jq ".Data[$j].ChildNodeList[$k].ID")" "$chapter_child_name" "${chapter_name}"
+                CommandLineOnlineClasses "$(echo "$curl_list" | jq ".Data[$j].ChildNodeList[$k].ID")" "$chapter_child_name" "${chapter_name}" "$chapter_child_totalsecond"
                 is_look_status=$((is_look_status + 1))
             else
                 log "已完成 ${chapter_child_name} "
@@ -137,8 +141,11 @@ function main() {
     curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     StuDetail_ID=$(echo "$curl_student_id" | jq '.Data[0].StuDetail_ID' | tr -d '"')
     StuID=$(echo "$curl_student_id" | jq '.Data[0].StuID' | tr -d '"')
-    #log "StuDetail_ID=$StuDetail_ID"
-    #log "StuID=$StuID"
+
+    test "$StuDetail_ID" = "null" && {
+        echo "cookie无效"
+        exit 1
+    }
 
     # 获取课程列表
     curl_std_curriculum_list=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Specialty/GetStuSpecialtyCurriculumList?StuDetail_ID=${StuDetail_ID}&IsStudyYear=1&StuID=${StuID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
@@ -156,6 +163,7 @@ function main() {
     }
     for (( ; ; )); do
         is_look_status=0
+        start_timestamp=$(date +%s)
         for ((i = 0; i < study_year_total; i++)); do
             std_curriculum_list=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$i]")
             curriculum_study_year=$(echo "$std_curriculum_list" | jq ".StudyYear")
@@ -187,10 +195,17 @@ function main() {
 
         test "$is_look_status" -eq 0 && {
             log "第${target_study_year}学期的所有课程完成"
+            start_timestamp=0
             break
         }
-        log "开始缓冲,时间:$sleep_time"
-        sleep "$sleep_time"
+        diff_timestamp=$(($(date +%s) - start_timestamp))
+        if [[ $diff_timestamp -gt 60 ]]; then
+            log "开始缓冲,时间:60s"
+            sleep 60
+        else
+            log "开始缓冲,时间:$((60-diff_timestamp))s"
+            sleep "$((60-diff_timestamp))"
+        fi
     done
 }
 init
