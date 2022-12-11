@@ -13,7 +13,7 @@ header_cookie="Cookie:"
 # 自动指定
 ip=$(curl -s cip.cc | grep "[[:digit:]].*" -o | head -n 1)
 # 手动指定（2022-11-24 仅需要设定新的ip变量即可，无需保证真实的出口IP）
-# ip="115.231.214.235"
+# ip="xxx.xxx.xxx.xxx"
 
 # 以下变量不需要变化
 header_accept="Accept: */*'"
