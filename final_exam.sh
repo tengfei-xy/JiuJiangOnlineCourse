@@ -65,7 +65,7 @@ function main() {
         exit 1
     fi
     final_exam_result_id=$(echo "$curl_final_exam_result_id" | jq '.Data.ResultId')
-    echo "期末考试的结果ID=${final_exam_result_id} "
+    # echo "期末考试的结果ID=${final_exam_result_id} "
 
     # 获取阶段测验的ExamPaper_ID
     curl_exam_paper_id=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetStuStagePaperList?StuID=${StuID}&ExamPaperType=3&Curriculum_ID=${curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
@@ -141,8 +141,8 @@ function main() {
         real_answare_json="${real_answare_json}""$(echo "$real_question_json" | jq -r ".[] | select(.ID==$real_id) | .MyAnswer=${real_answare}")"
 
     done
-    EndTime=2620
 
+    EndTime=1501
     real_answare_compain=$(echo "$real_answare_json" | jq -s '.' | jq "{resultId: ${final_exam_result_id},list: .,EndTime: ${EndTime},StuDetail_ID: \"${StuDetail_ID}\",StuID: \"${StuID}\",Examination_ID: \"${final_examination_id}\",Curriculum_ID: \"${curriculum_id}\"} | tostring" | tr -d "\\")
     real_answare_compain=${real_answare_compain##\"}
     real_answare_compain=${real_answare_compain%%\"}
@@ -166,7 +166,7 @@ function main() {
 
     total_seconds=$(echo "$curl_final_exam_result_id" | jq '.Data.PaperInfo.TotalSecends')
     if [ "$total_seconds" -ge 6300 ]; then
-        echo "$((6300 - total_seconds))秒后才可提交答案"
+        echo "$((total_seconds - 6300 ))秒后才可提交答案"
         exit 0
     fi
 
