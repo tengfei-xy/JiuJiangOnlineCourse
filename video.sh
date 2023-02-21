@@ -7,7 +7,7 @@ target_study_year=${1:-5}
 
 # 指定Cookie
 # 格式:header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
-header_cookie="Cookie:"
+header_cookie="Cookie: sessionId=8a44738fbea14817bd1aea4e53f43082; UserKey=59AE037292AD446DB169F4CADF59CCEE"
 
 # 当一次循环保存记录后,如果进度依然是0，需要更换IP
 # 自动指定
