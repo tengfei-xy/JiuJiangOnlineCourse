@@ -199,9 +199,9 @@ function main() {
             break
         }
         diff_timestamp=$(($(date +%s) - start_timestamp))
-        if [[ $diff_timestamp -gt 60 ]]; then
-            log "开始缓冲,时间:60s"
-            sleep 60
+        log "执行时间为${diff_timestamp}"
+        if [[ $diff_timestamp -ge 60 ]]; then
+            log "跳过缓冲"
         else
             log "开始缓冲,时间:$((60-diff_timestamp))s"
             sleep "$((60-diff_timestamp))"
