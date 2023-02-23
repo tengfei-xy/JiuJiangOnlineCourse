@@ -33,7 +33,7 @@ function error() {
     echo -e "\033[1;31m$(date "+%F %T") ${1}\033[0m"
 }
 function CommandLineOnlineClasses() {
-    curl_save_course_look=$(curl -s "http://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq '.Message' | tr -d '"')
+    curl_save_course_look=$(curl -s "http://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq -r '.Message')
 
     case "$curl_save_course_look" in
     *观看记录添加成功*)
@@ -139,8 +139,8 @@ function main() {
 
     # 获取学生ID
     curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    StuDetail_ID=$(echo "$curl_student_id" | jq '.Data[0].StuDetail_ID' | tr -d '"')
-    StuID=$(echo "$curl_student_id" | jq '.Data[0].StuID' | tr -d '"')
+    StuDetail_ID=$(echo "$curl_student_id" | jq -r'.Data[0].StuDetail_ID')
+    StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID')
 
     test "$StuDetail_ID" = "null" && {
         echo "cookie无效"
@@ -171,7 +171,7 @@ function main() {
             # 如果不是指定的学期
             test "$curriculum_study_year" -ne "$target_study_year" && continue
 
-            curriculum_name=$(echo "$std_curriculum_list" | jq ".CuName" | tr -d '"')
+            curriculum_name=$(echo "$std_curriculum_list" | jq -r ".CuName")
             curriculum_chapters=$(echo "$std_curriculum_list" | jq ".CourseChapters")
             curriculum_read_chapters=$(echo "$std_curriculum_list" | jq ".CourseReadChapters")
 
@@ -186,7 +186,7 @@ function main() {
                 continue
             }
 
-            log "开始学习 第${curriculum_study_year}学期的${curriculum_name}"
+            log "开始学习 第${curriculum_study_year}学期的${curriculum_name} 目标课程数:${curriculum_chapters}, 已完成数:${curriculum_read_chapters}"
             curriculum_course_id=$(echo "$std_curriculum_list" | jq ".Course_ID")
             curriculum_curriculum_id=$(echo "$std_curriculum_list" | jq ".Curriculum_ID")
             curriculum_examination_id=$(echo "$std_curriculum_list" | jq ".Examination_ID")
@@ -199,11 +199,10 @@ function main() {
             break
         }
         diff_timestamp=$(($(date +%s) - start_timestamp))
-        log "执行时间为${diff_timestamp}"
         if [[ $diff_timestamp -ge 60 ]]; then
-            log "跳过缓冲"
+            log "本次执行时间为${diff_timestamp}s,跳过缓冲"
         else
-            log "开始缓冲,时间:$((60-diff_timestamp))s"
+            log "本次执行时间:${diff_timestamp}s,开始缓冲,缓存时间:$((60-diff_timestamp))s"
             sleep "$((60-diff_timestamp))"
         fi
     done
