@@ -139,7 +139,7 @@ function main() {
 
     # 获取学生ID
     curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    StuDetail_ID=$(echo "$curl_student_id" | jq -r'.Data[0].StuDetail_ID')
+    StuDetail_ID=$(echo "$curl_student_id" | jq -r '.Data[0].StuDetail_ID')
     StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID')
 
     test "$StuDetail_ID" = "null" && {

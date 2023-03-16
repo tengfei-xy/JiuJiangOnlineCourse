@@ -2,6 +2,7 @@
 
 # 指定Cookie
 # 格式:header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
+
 header_cookie="Cookie: "
 
 # 以下变量不需要变化
@@ -76,7 +77,6 @@ function init() {
     esac
 }
 
-
 function main() {
     # 获取学生ID
     curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
@@ -126,7 +126,7 @@ function main() {
     # 获取期末考试的结果ID
     # 注:仅有进入期末考试页面时才能获取到result_id
     curl_final_exam_result_id=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperQuestions?examPaperId=${final_exam_paper_id}&IsBegin=1&StuID=${StuID}&StuDetail_ID=${StuDetail_ID}&Examination_ID=${final_examination_id}&Curriculum_ID=${curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    if [ "$(echo "$curl_final_exam_result_id" | jq '.Message' | tr -d '"')" == "verify" ]; then
+    if [ "$(echo "$curl_final_exam_result_id" | jq -r '.Message')" == "verify" ]; then
         echo "需要在 期末考试 页面刷新进行验证,注:若刷新后依然需要验证,请重新登录以获取新cookie"
         exit 1
     fi
@@ -139,7 +139,7 @@ function main() {
 
     # 获取阶段测验的result_id
     curl_exam_result_id=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperQuestions?examPaperId=${exam_paper_id}&IsBegin=1&StuID=${StuID}&StuDetail_ID=${StuDetail_ID}&Examination_ID=0&Curriculum_ID=${curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    if [ "$(echo "$curl_exam_result_id" | jq '.Message' | tr -d '"')" == "verify" ]; then
+    if [ "$(echo "$curl_exam_result_id" | jq -r '.Message')" == "verify" ]; then
         echo "需要在 阶段测评 页面刷新进行验证,注:若刷新后依然需要验证,请重新登录以获取新cookie"
         exit 1
     fi
@@ -226,19 +226,25 @@ function main() {
     echo "预计保底分数:${score_all}"
 
     # 上传答案（仅上传，上传后自动保存答案，网页刷新后理论上可以查看已自动答题）
+    # http://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitSimplePractice
     curl_SubmitExamPractice=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitSimplePractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
     echo "保存答案结果:$(echo "$curl_SubmitExamPractice" | jq -r '.Message')"
 
-    total_seconds=$(echo "$curl_final_exam_result_id" | jq '.Data.PaperInfo.TotalSecends')
-    if [ "$total_seconds" -ge 6300 ]; then
-        echo "$((total_seconds - 6300 ))秒后才可提交答案"
-        exit 0
-    fi
+    test "$score_all" -lt 60 && { echo "分数小于60不提交" && exit 0 ;}
 
     # 自动提交/交卷
-    curl_SubmitExamPractice=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitExamPractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
-    curl_SubmitExamPractice_result=$(echo "$curl_SubmitExamPractice" | jq -r '.Message')
-    echo "提交试卷结果:${curl_SubmitExamPractice_result}"
+    while true; do
+        curl_SubmitExamPractice=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitExamPractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
+        curl_SubmitExamPractice_result=$(echo "$curl_SubmitExamPractice" | jq -r '.Message')
+        if [ "$curl_SubmitExamPractice_result" == "交卷成功" ]; then
+            echo "提交试卷结果:${curl_SubmitExamPractice_result}"
+            exit 0
+        fi
+        echo "提交试卷结果:${curl_SubmitExamPractice_result},180秒后重新提交"
+        sleep 180
+
+    done
+
 }
 init
 main

@@ -82,8 +82,8 @@ function init() {
 function main() {
     # 获取学生ID
     curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    StuDetail_ID=$(echo "$curl_student_id" | jq '.Data[0].StuDetail_ID' | tr -d '"')
-    StuID=$(echo "$curl_student_id" | jq '.Data[0].StuID' | tr -d '"')
+    StuDetail_ID=$(echo "$curl_student_id" | jq -r '.Data[0].StuDetail_ID' )
+    StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID' )
 
     test "$StuDetail_ID" = "null" && { echo "cookie无效" ; exit 1; }
 
@@ -93,7 +93,7 @@ function main() {
     for ((i = 0; i < study_year_total; i++)); do
 
         StudyYear=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$i].StudyYear")
-        CuName=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$i].CuName" | tr -d '"')
+        CuName=$(echo "$curl_std_curriculum_list" | jq -r ".Data.list[$i].CuName" )
         echo "$((i + 1))、第${StudyYear}学期 ${CuName}"
     done
 
@@ -111,7 +111,7 @@ function main() {
 
     # 获取result_id
     curl_result_id=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperQuestions?examPaperId=${exam_paper_id}&IsBegin=1&StuID=${StuID}&StuDetail_ID=${StuDetail_ID}&Examination_ID=0&Curriculum_ID=${curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    if [ "$(echo "$curl_result_id" | jq '.Message' | tr -d '"')" == "verify" ]; then
+    if [ "$(echo "$curl_result_id" | jq -r '.Message')" == "verify" ]; then
         echo "需要在考试页面刷新进行验证,若刷新后依然需要验证,请重新登录以获取新cookie"
         exit 1
     fi
@@ -187,7 +187,7 @@ function main() {
     done
 
     EndTime=1501
-    real_answare_compain=$(echo "$real_answare_json" | jq -s '.' | jq "{resultId: ${result_id},list: .,EndTime: ${EndTime},StuDetail_ID: \"${StuDetail_ID}\",StuID: \"${StuID}\",Examination_ID: \"0\",Curriculum_ID: \"${curriculum_id}\"} | tostring" | tr -d "\\")
+    real_answare_compain=$(echo "$real_answare_json" | jq -s '.' | jq "{resultId: ${result_id},list: .,EndTime: ${EndTime},StuDetail_ID: \"${StuDetail_ID}\",StuID: \"${StuID}\",Examination_ID: \"0\",Curriculum_ID: \"${curriculum_id}\"} | tostring" | sed 's/\\//g')
     real_answare_compain=${real_answare_compain##\"}
     real_answare_compain=${real_answare_compain%%\"}
 
