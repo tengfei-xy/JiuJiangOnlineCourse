@@ -33,7 +33,7 @@ function error() {
     echo -e "\033[1;31m$(date "+%F %T") ${1}\033[0m"
 }
 function CommandLineOnlineClasses() {
-    curl_save_course_look=$(curl -s "http://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq -r '.Message')
+    curl_save_course_look=$(curl -s "https://jjxy.web2.superchutou.com/service/datastore/WebCourse/SaveCourse_Look" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --data "{\"CourseChapters_ID\":\"${1}\",\"LookType\":0,\"LookTime\":60,\"IP\":\"${ip}\"}" --compressed --insecure | jq -r '.Message')
 
     case "$curl_save_course_look" in
     *观看记录添加成功*)
@@ -46,7 +46,7 @@ function CommandLineOnlineClasses() {
 }
 function GetCourseChapterList() {
 
-    curl_list=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Question/GetCourse_ChaptersNodeList?Valid=1&Course_ID=${1}&StuID=${StuID}&Curriculum_ID=${2}&Examination_ID=${3}&StuDetail_ID=${StuDetail_ID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
+    curl_list=$(curl "https://jjxy.web2.superchutou.com/service/eduSuper/Question/GetCourse_ChaptersNodeList?Valid=1&Course_ID=${1}&StuID=${StuID}&Curriculum_ID=${2}&Examination_ID=${3}&StuDetail_ID=${StuDetail_ID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     chapter_list_length=$(echo "$curl_list" | jq '.Data|length')
     log "共${chapter_list_length}章"
 
@@ -138,7 +138,7 @@ function main() {
     log "指定学习第${target_study_year}学期"
 
     # 获取学生ID
-    curl_student_id=$(curl 'http://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
+    curl_student_id=$(curl 'https://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     StuDetail_ID=$(echo "$curl_student_id" | jq -r '.Data[0].StuDetail_ID')
     StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID')
 
@@ -148,7 +148,7 @@ function main() {
     }
 
     # 获取课程列表
-    curl_std_curriculum_list=$(curl "http://jjxy.web2.superchutou.com/service/eduSuper/Specialty/GetStuSpecialtyCurriculumList?StuDetail_ID=${StuDetail_ID}&IsStudyYear=1&StuID=${StuID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
+    curl_std_curriculum_list=$(curl "https://jjxy.web2.superchutou.com/service/eduSuper/Specialty/GetStuSpecialtyCurriculumList?StuDetail_ID=${StuDetail_ID}&IsStudyYear=1&StuID=${StuID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     study_year_total=$(echo "$curl_std_curriculum_list" | jq '.Data.list | length')
     study_year_max=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$((study_year_total - 1))].StudyYear")
 
