@@ -2,7 +2,7 @@
 
 # 指定Cookie
 # 格式:header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
-header_cookie="Cookie: "
+header_cookie="Cookie: sessionId=5975256cab690affa6b3a668ad318e74; UserKey=DA2BA99485294C9488F4F1060C883069"
 
 
 # 以下变量不需要变化
@@ -127,13 +127,13 @@ function main() {
     real_question_json=$(echo "$curl_question" | jq '.Data.QuestionType[].Question | del(.[].WExamPaperDetailID,.[].ExamPaperID,.[].QuestionStore_Name,.[].QuestionType_Name,.[].Level,.[].Body,.[].AnswerCount,.[].Answer,.[].QuestionData_ID,.[].QuestionData,.[].Sort,.[].Mark,.[].IsCollection,.[].ExamPaper_Detail_ID,.[].ExamPaperName,.[].AddTime,.[].Content,.[].QuestionStore_ID,.[].Source,.[].DoCounts,.[].RightCounts,.[].ChapterId,.[].Score,.[].DataContent,.[].SubQuestionType_ID,.[].SubScore,.[].Title)' | jq -s add)
 
     # 设置并计算分数
-    score_1=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==1) | .Sorce')
+    score_1=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==1) | .Sorce' | sed 's/\..*//')
     test -z "$score_1" && score_1=0
-    score_2=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==2) | .Sorce')
+    score_2=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==2) | .Sorce' | sed 's/\..*//')
     test -z "$score_2" && score_2=0
-    score_3=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==3) | .Sorce')
+    score_3=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==3) | .Sorce' | sed 's/\..*//')
     test -z "$score_3" && score_3=0
-    score_4=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==4) | .Sorce')
+    score_4=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==4) | .Sorce' | sed 's/\..*//')
     test -z "$score_4" && score_4=0
     score_all=0
 

@@ -151,13 +151,13 @@ function main() {
     exam_question=$(echo "$curl_exam_result" | jq '.Data.QuestionType[].Question')
 
     # 设置并计算分数
-    score_1=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==1) | .Sorce')
+    score_1=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==1) | .Sorce' | sed 's/\..*//')
     test -z "$score_1" && score_1=0
-    score_2=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==2) | .Sorce')
+    score_2=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==2) | .Sorce' | sed 's/\..*//')
     test -z "$score_2" && score_2=0
-    score_3=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==3) | .Sorce')
+    score_3=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==3) | .Sorce' | sed 's/\..*//')
     test -z "$score_3" && score_3=0
-    score_4=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==4) | .Sorce')
+    score_4=$(echo "$curl_question" | jq '.Data.QuestionType[].TypeInfo | select(.QuestionType_ID==4) | .Sorce' | sed 's/\..*//')
     test -z "$score_4" && score_4=0
     score_all=0
 
