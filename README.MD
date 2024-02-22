@@ -92,8 +92,6 @@
 
 > 参考格式：
 >
-> target_study_year=${1:-5}
->
 > header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
 
 api_question_result：期末考试的答案地址
