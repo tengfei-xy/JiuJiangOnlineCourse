@@ -84,6 +84,24 @@
 
 ## final_exam.sh - 期末考试脚本
 
+**变量说明：**
+
+将脚本下载后需要修改的变量是
+
+**header_cookie**：微信扫描登录网课后，即可通过浏获取到Cookie，Cookie的值包含sessionId和UserKey
+
+> 参考格式：
+>
+> target_study_year=${1:-5}
+>
+> header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
+
+api_question_result：期末考试的答案地址
+
+> 参考格式：
+>
+> https://jxky.web2.superchutou.com/xxx/xxx/getxxx
+
 **使用效果：**
 
 自动答题（自动上传答案）

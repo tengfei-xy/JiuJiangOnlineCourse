@@ -2,8 +2,7 @@
 
 # 指定Cookie
 # 格式:header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
-header_cookie="Cookie: sessionId=5975256cab690affa6b3a668ad318e74; UserKey=DA2BA99485294C9488F4F1060C883069"
-
+header_cookie="Cookie: "
 
 # 以下变量不需要变化
 header_accept="Accept: */*'"
@@ -13,8 +12,6 @@ header_cache_control="Cache-Control: max-age=0"
 header_connection="Connection: keep-alive"
 header_content_type="Content-Type: application/json; charset=utf-8"
 header_user_agent="User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
-
-
 function init() {
     os=$(uname)
     case $os in
@@ -30,7 +27,7 @@ function init() {
         which jq >/dev/null 2>&1 || {
             log "准备安装jq命令..."
             brew install jq || {
-                error "brew install jq 执行失败"
+                 "brew install jq 执行失败"
                 exit 1
             }
         }
@@ -82,10 +79,13 @@ function init() {
 function main() {
     # 获取学生ID
     curl_student_id=$(curl 'https://jjxy.web2.superchutou.com/service/eduSuper/StudentinfoDetail/GetStudentDetailRegisterSet' -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
-    StuDetail_ID=$(echo "$curl_student_id" | jq -r '.Data[0].StuDetail_ID' )
-    StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID' )
+    StuDetail_ID=$(echo "$curl_student_id" | jq -r '.Data[0].StuDetail_ID')
+    StuID=$(echo "$curl_student_id" | jq -r '.Data[0].StuID')
 
-    test "$StuDetail_ID" = "null" && { echo "cookie无效" ; exit 1; }
+    test "$StuDetail_ID" = "null" && {
+        echo "cookie无效"
+        exit 1
+    }
 
     # 获取课程列表
     curl_std_curriculum_list=$(curl "https://jjxy.web2.superchutou.com/service/eduSuper/Specialty/GetStuSpecialtyCurriculumList?StuDetail_ID=${StuDetail_ID}&IsStudyYear=1&StuID=${StuID}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
@@ -93,7 +93,7 @@ function main() {
     for ((i = 0; i < study_year_total; i++)); do
 
         StudyYear=$(echo "$curl_std_curriculum_list" | jq ".Data.list[$i].StudyYear")
-        CuName=$(echo "$curl_std_curriculum_list" | jq -r ".Data.list[$i].CuName" )
+        CuName=$(echo "$curl_std_curriculum_list" | jq -r ".Data.list[$i].CuName")
         echo "$((i + 1))、第${StudyYear}学期 ${CuName}"
     done
 
@@ -120,7 +120,7 @@ function main() {
     # 获取 阶段测评答案
     curl_exam_result=$(curl "https://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperResult?busId=${exam_paper_id}&resultId=${result_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     exam_question=$(echo "$curl_exam_result" | jq '.Data.QuestionType[].Question')
-    
+
     # 获取 阶段测评的问题
     curl_question=$(curl "https://jjxy.web2.superchutou.com/service/eduSuper/Question/GetExamPaperQuestions?examPaperId=${exam_paper_id}&type=2&StuDetail_ID=${StuDetail_ID}&StuID=${StuID}&Examination_ID=0&Curriculum_ID=${curriculum_id}" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "$header_cookie" -H "$header_user_agent" --compressed --insecure -s)
     # 已经在下列命令中删除了问题标题
@@ -137,8 +137,7 @@ function main() {
     test -z "$score_4" && score_4=0
     score_all=0
 
-
-    # echo "$curl_ans" | jq 
+    # echo "$curl_ans" | jq
 
     real_question_length=$(echo "$real_question_json" | jq '. | length')
     for ((i = 0; i < real_question_length; i++)); do
@@ -181,20 +180,44 @@ function main() {
                 ;;
             esac
         fi
-        echo "题号:$((i + 1)) 答案:${real_answare} 预计分数:${score_all}"
-        real_answare_json="${real_answare_json}""$(echo "$real_question_json" | jq -r ".[] | select(.ID==$real_id) | .MyAnswer=${real_answare}")"
+        echo -n "题号:$((i + 1)) 答案:${real_answare} 预计分数:${score_all}  "
+
+        # 格式化答案
+        real_answare_json="$(echo "$real_question_json" | jq -r ".[] | select(.ID==$real_id) | .MyAnswer=${real_answare}")"
+        real_answare_compain=$(echo "$real_answare_json" | jq -s '.' | jq "{resultId: ${result_id},list: .,StuDetail_ID: \"${StuDetail_ID}\",StuID: \"${StuID}\",Examination_ID: \"0\"} | tostring" | sed 's/\\//g')
+        real_answare_compain=${real_answare_compain##\"}
+        real_answare_compain=${real_answare_compain%%\"}
+
+        # 上传答案（仅上传，上传后自动保存答案，网页刷新后理论上可以查看已自动答题）
+        curl_SubmitExamPractice=$(curl 'https://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitSimplePractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
+        retval=$(echo "$curl_SubmitExamPractice" | jq -r '.Message')
+        echo -n "保存答案结果:"
+        test "$retval" != "保存成功" && {
+            i=$((i - 1))
+            echo "$retval,2秒后重试"
+            sleep 2
+
+            # 减去原来加上的分数，因为重试
+            case "$real_question_type" in
+            1)
+                score_all=$((score_all - score_1))
+                ;;
+            2)
+                score_all=$((score_all - score_2))
+                ;;
+            3)
+                score_all=$((score_all - score_3))
+                ;;
+            4)
+                score_all=$((score_all - score_4))
+                ;;
+            esac
+
+            continue
+        }
+        echo "$retval"
 
     done
-
-    EndTime=1501
-    real_answare_compain=$(echo "$real_answare_json" | jq -s '.' | jq "{resultId: ${result_id},list: .,EndTime: ${EndTime},StuDetail_ID: \"${StuDetail_ID}\",StuID: \"${StuID}\",Examination_ID: \"0\",Curriculum_ID: \"${curriculum_id}\"} | tostring" | sed 's/\\//g')
-    real_answare_compain=${real_answare_compain##\"}
-    real_answare_compain=${real_answare_compain%%\"}
-
-    # echo "${real_answare_compain}"
-    # 上传答案（仅上传，上传后自动保存答案，网页刷新后理论上可以查看已自动答题）
-    curl_SubmitExamPractice=$(curl 'https://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitSimplePractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
-    echo "保存答案结果:$(echo "$curl_SubmitExamPractice" | jq -r '.Message')"
 
     # 自动提交/交卷
     curl_SubmitExamPractice=$(curl 'https://jjxy.web2.superchutou.com/service/eduSuper/Question/SubmitExamPractice' --data-raw "$real_answare_compain" -H "$header_accept" -H "$header_accept_language" -H "$header_access_control_allow_origin" -H "$header_cache_control" -H "$header_connection" -H "$header_content_type" -H "${header_cookie}; themeName=default" -H "$header_user_agent" --compressed --insecure -s)
@@ -202,7 +225,6 @@ function main() {
     echo "提交试卷结果:${curl_SubmitExamPractice_result}"
 
 }
-
 
 init
 main
