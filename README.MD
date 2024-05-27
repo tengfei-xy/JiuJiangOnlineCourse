@@ -7,7 +7,7 @@
 > 1. video.sh是针对视频，exam.sh是针对阶段测评，final_exam.sh针对期末考试
 >2. Windows不支持使用，除非在windows安装bash/zsh的执行环境
 > 3. macOS/Linux需要安装curl和jq命令
-> 4. 对脚本使用用疑问，欢迎交流 微信号: SXL--LP
+> 4. 对脚本使用用疑问，欢迎交流 联系方式位于[个人首页](https://github.com/tengfei-xy)
 
 
 
@@ -17,16 +17,16 @@
 
 将脚本下载后需要修改的变量是
 
-**target_study_year**：指定需要学习第几个学期，最小为1,也支持从命令行的参数去设置,注:1表示$1,5表示第5学期,当$1不存在时target_study_year=5,$1存在时使用target_study_year=$1
+**target_study_year**：指定需要学习第几个学期，最小为1,也支持从命令行的参数去设置,注:1表示1,5表示第5学期,当`$1`不存在时`target_study_year=5`,`$1`存在时使用`target_study_year=1`
 
-**header_cookie**：微信扫描登录网课后，即可通过浏获取到Cookie，Cookie的值包含sessionId和UserKey
+**header_cookie**：微信或其他方式扫描登录网课后，即可通过浏获取到Cookie，Cookie的值包含sessionId和UserKey
 
-> 参考格式：
->
-> target_study_year=${1:-5}
->
-> header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
->
+参考格式
+
+```bash
+target_study_year=${1:-5}
+header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
+```
 
 **使用说明：**
 
