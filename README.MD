@@ -2,16 +2,24 @@
 
 ## 项目说明
 
-该项目是一种通过命令行（macOS、Linux）来学习网课的方式。一小时快速完成观看所有视频和试题。
+该项目是一种通过命令行（macOS、Linux、windows）来学习网课的方式。一小时快速完成观看所有视频和试题。
 
-> 1. video.sh是针对视频，exam.sh是针对阶段测评，final_exam.sh针对期末考试
->2. Windows不支持使用，除非在windows安装bash/zsh的执行环境
-> 3. macOS/Linux需要安装curl和jq命令
-> 4. 对脚本使用用疑问，欢迎交流 联系方式位于[个人首页](https://github.com/tengfei-xy)
+# 说明：
 
+1. video.sh是针对视频，exam.sh是针对阶段测评，final_exam.sh针对期末考试
+2. windows使用说明（来自网友的测试后的使用教程）
 
+    第一步：安装git环境，[教程链接](https://blog.csdn.net/weixin_53273474/article/details/137965922?spm=1001.2101.3001.4242.2)
 
-## video.sh - 视频脚本
+    第二步：下载[jq组件](https://jqlang.github.io/jq/download/)，放到git安装目录的mingw64\bin下 并重命名为jq.exe
+
+    第三步（重要）：为.sh文件添加可执行权限，在video.sh文件目录空白处右键运行Open Git Bash here在窗口输入`git update-index --chmod=+x video.sh`
+
+    第四步：执行命令`./video.sh`
+3. 所有系统都需要安装curl和jq命令
+4. 对脚本使用用疑问，欢迎交流 联系方式位于[个人首页](https://github.com/tengfei-xy)
+
+## [video.sh](http://video.sh) - 视频脚本
 
 **变量说明：**
 
@@ -23,7 +31,7 @@
 
 参考格式
 
-```bash
+```Bash
 target_study_year=${1:-5}
 header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
 ```
@@ -31,35 +39,29 @@ header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8s
 **使用说明：**
 
 1. 如果一节课程（包括其下的小节课）全部学习完成，将跳过学习
-
 2. 该脚本将重复执行直到该学期的课程全部完成。下方是全部学习完成的日志输出
 
-   > 2022-10-11 17:13:38 指定学习第4学期
-   >
-   > 2022-10-11 17:13:39 共24门课,共5学期
-   >
-   > 2022-10-11 17:13:40 跳过学习 毛泽东思想和中国特色社会主义理论体系概论 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 跳过学习 毕业论文指导 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 跳过学习 热力学与统计物理 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 跳过学习 电子线路 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 跳过学习 脉冲与数字电路 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 跳过学习 计算机语言及软件应用 目标课程已完成
-   >
-   > 2022-10-11 17:13:40 第4学期的所有课程完成
-
+    > 2022-10-11 17:13:38 指定学习第4学期
+   
+   2022-10-11 17:13:39 共24门课,共5学期
+   
+   2022-10-11 17:13:40 跳过学习 毛泽东思想和中国特色社会主义理论体系概论 目标课程已完成
+   
+   2022-10-11 17:13:40 跳过学习 毕业论文指导 目标课程已完成
+   
+   2022-10-11 17:13:40 跳过学习 热力学与统计物理 目标课程已完成
+   
+   2022-10-11 17:13:40 跳过学习 电子线路 目标课程已完成
+   
+   2022-10-11 17:13:40 跳过学习 脉冲与数字电路 目标课程已完成
+   
+   2022-10-11 17:13:40 跳过学习 计算机语言及软件应用 目标课程已完成
+   
+   2022-10-11 17:13:40 第4学期的所有课程完成
 3. 针对视频验证，需要人工参与，在网页中打开任何一个视频，直接验证即可。注：在脚本执行过程中，会提示需要进行验证，此时在网页打开中的视频进行暂停就有出现验证窗口，验证成功后脚本将继续。另外，脚本不会因为需要验证而停留，手动验证即可。
-
 4. 当需要多学期学期时，建议多脚本并行执行以加快刷视频的速度,如 ./video.sh 1(表示刷第一学期的视频)
-
 5. 当一次（至多3次）循环保存记录后,如果进度依然是0，可能需要更换或手动指定IP变量
-
 6. 一学期的课程循环后如果不足60秒，将缓冲挂起以补足60秒。
-
 7. 日志中输出的进度是添加保存进度之前的进度，意为观看的秒数。
 
 **脚本思路：**
@@ -68,9 +70,7 @@ header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8s
 2. 当发送SaveCourse_Look页下的ID超过视频的时长的60%时，将标记完成，但播放时长超过视频的时长时才会算真正且自动完成（脚本的执行逻辑）
 3. 视频的验证属于系统后台的功能。在某些时候，该功能会关闭，届时无需验证。
 
-
-
-## exam.sh - 阶段测评脚本
+## [exam.sh](http://exam.sh) - 阶段测评脚本
 
 **使用效果：**
 
@@ -79,8 +79,6 @@ header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8s
 **使用方法：**
 
 进入阶段测评页面后再运行，当需要验证时，刷新考试页面即可,若刷新后依然需要验证,请重新登录以获取新cookie。
-
-
 
 ## final_exam.sh - 期末考试脚本
 
@@ -91,14 +89,14 @@ header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8s
 **header_cookie**：微信扫描登录网课后，即可通过浏获取到Cookie，Cookie的值包含sessionId和UserKey
 
 > 参考格式：
->
-> header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
+
+header_cookie="Cookie: sessionId=48K50np1t2zoIp8etn1Md8u1Wn4A7f4l; UserKey=77E8sgV2ZhdE587Vxs0NQ6K87cAP06hj"
 
 api_question_result：期末考试的答案地址
 
 > 参考格式：
->
-> https://jxky.web2.superchutou.com/xxx/xxx/getxxx
+
+[https://jxky.web2.superchutou.com/xxx/xxx/getxxx](https://jxky.web2.superchutou.com/xxx/xxx/getxxx)
 
 **使用效果：**
 
@@ -117,3 +115,4 @@ api_question_result：期末考试的答案地址
 **脚本思路：**
 
 1. 期末考试来自于脚本的指定的API
+
